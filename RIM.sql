@@ -282,7 +282,7 @@ retailer_site_code	INT				NOT NULL,
 order_DATE			DATE		 	NULL,
 fin_code			NVARCHAR(10)	NULL,
 region				NVARCHAR(255)	NULL,
-sales_rep			INT				NULL,
+sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
 CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
@@ -294,10 +294,10 @@ IF OBJECT_ID('dbo.Orderline', 'U') IS NOT NULL
 CREATE TABLE dbo.Orderline(
 orderline_code		INT				NOT NULL,
 quantity			INT				NOT NULL,
-unit_cost			FLOAT(10)		NOT NULL,
-unit_price			FLOAT(10)		NOT NULL,
-unit_sale_price		FLOAT(10)		NOT NULL,
-ship_DATE			DATE			NULL,
+unit_cost			DECIMAL(10,2)	NOT NULL,
+unit_price			DECIMAL(10,2)	NOT NULL,
+unit_sale_price		DECIMAL(10,2)	NOT NULL,
+ship_date			DATE			NULL,
 sales_item_id		INT				NULL,
 order_id			INT				NOT NULL,
 CONSTRAINT pk_Orderline
@@ -331,7 +331,6 @@ IF OBJECT_ID('dbo.Sales_item', 'U') IS NOT NULL
 CREATE TABLE dbo.Sales_item(
 sales_item_id		INT				NOT NULL,
 sales_item_name		NVARCHAR(255)	NOT NULL,
-sales_item_price	FLOAT(10)		NOT NULL,
 CONSTRAINT pk_Sales_item
 	PRIMARY KEY (sales_item_id)
 );
@@ -341,16 +340,14 @@ IF OBJECT_ID('dbo.Product', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Product(
 product_id			INT				NOT NULL,
-product_name		NVARCHAR(255)	NULL,
 description			NVARCHAR(255)	NULL,
 prod_size			NVARCHAR(255)	NULL,
 color				NVARCHAR(255)	NULL,
-quantity			INT				NULL,
-unit_price			DECIMAL(15,5)	NULL,
 picture_name		NVARCHAR(255)	NULL,
 category			NVARCHAR(1)		NULL,
-introduction_DATE	DATE			NOT NULL,
-margin				FLOAT(8)		NOT NULL,
+introduction_date	DATE			NOT NULL,
+production_cost		DECIMAL(15,5)	NOT NULL,
+margin				DECIMAL(5,4)	NOT NULL,
 product_type_code	INT				NOT NULL,
 CONSTRAINT pk_Product
 	PRIMARY KEY (product_id)
@@ -386,6 +383,7 @@ CREATE TABLE dbo.Product_type(
 product_type_code	INT				NOT NULL,
 product_line_code	INT				NULL,
 product_type_en		NVARCHAR(50)	NOT NULL,
+inventory_minimum	INT				NULL,
 CONSTRAINT pk_Product_type
 	PRIMARY KEY (product_type_code)
 );
@@ -428,6 +426,7 @@ IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Trip(
 trip_id				INT				NOT NULL,
+trip_price			DECIMAL(10,2)	NOT NULL,
 min_participants	INT				NOT NULL,
 max_participants	INT				NOT NULL,
 booker_detail_id	INT				NOT NULL,
@@ -604,6 +603,11 @@ ALTER TABLE dbo.Orderline
 	ADD CONSTRAINT fk_Orderline_Customer_order
 	FOREIGN KEY(order_id)
 	REFERENCES dbo.Customer_order(order_id);
+
+ALTER TABLE dbo.Product
+	ADD CONSTRAINT fk_Product_Sales_item
+	FOREIGN KEY(product_id)
+	REFERENCES dbo.Sales_item(sales_item_id);
 	
 ALTER TABLE dbo.Product
 	ADD CONSTRAINT fk_Product_Product_type
@@ -639,6 +643,11 @@ ALTER TABLE dbo.Salestarget
 	ADD CONSTRAINT fk_Salestarget_Employee
 	FOREIGN KEY(employee_id)
 	REFERENCES dbo.Employee(emp_id);
+
+ALTER TABLE dbo.Trip
+	ADD CONSTRAINT fk_Trip_Sales_item
+	FOREIGN KEY(trip_id)
+	REFERENCES dbo.Sales_item(sales_item_id);
 	
 ALTER TABLE dbo.Trip
 	ADD CONSTRAINT fk_Trip_Booker_detail
@@ -692,7 +701,7 @@ AS BEGIN
 	SELECT @min = min_salary, @max = max_salary
 	FROM dbo.Job
 	WHERE job_id = @job_id;
-	IF (@salary >= @min AND @salary <= @max)
+	IF (@salary/12 >= @min AND @salary/12 <= @max)
 		RETURN 1;
 	RETURN 0;
 END
@@ -709,7 +718,7 @@ GO
 
 ALTER TABLE dbo.Retailer
 	ADD CONSTRAINT chk_Retailer_type
-	CHECK ((type = 'b' AND discount IS NOT NULL AND max_quantity_order IS NULL) OR (type = 's' AND discount IS NULL AND max_quantity_order IS NULL));
+	CHECK ((type = 'b' AND discount IS NOT NULL AND max_quantity_order IS NULL) OR (type = 's' AND discount IS NULL AND max_quantity_order IS NOT NULL));
 
 ALTER TABLE dbo.Employee
 	ADD CONSTRAINT chk_Employee_salary
