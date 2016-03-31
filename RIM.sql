@@ -735,5 +735,13 @@ ALTER TABLE dbo.Employee
 ALTER TABLE dbo.Employee
 	ADD CONSTRAINT chk_Employee_Manager_overload
 	CHECK (dbo.f_getNumSubordinates(manager_id) <= 12);
+	
+ALTER TABLE dbo.Retailer
+    ADD CONSTRAINT chk_Retailer_Discount
+	CHECK (discount <= 8);
+
+ALTER TABLE dbo.Promotion
+    ADD CONSTRAINT chk_Promotion_ValidDate
+	CHECK (end_date > start_date);
 
 GO
