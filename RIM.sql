@@ -711,17 +711,24 @@ IF OBJECT_ID('dbo.f_checkSalary', 'FN') IS NOT NULL
 
 GO
 
-CREATE FUNCTION dbo.f_checkSalary(@job_number INT, @salary DECIMAL(15,2))
+CREATE FUNCTION dbo.f_checkSalary(@job_number INT, @salary DECIMAL(15,2), @manager_id INT)
 RETURNS INT
 AS BEGIN
 	DECLARE @min DECIMAL(15,2);
 	DECLARE @max DECIMAL(15,2);
+	DECLARE @manager_salary DECIMAL(15,2);
 	IF (@salary IS NULL AND @job_number IS NULL)
 		RETURN 1;
+
 	SELECT @min = min_salary, @max = max_salary
 	FROM dbo.Job
 	WHERE job_number = @job_number;
-	IF (@salary/12 >= @min AND @salary/12 <= @max)
+
+	SELECT @manager_salary = salary
+	FROM dbo.Employee
+	WHERE emp_id = @manager_id;
+
+	IF (@salary/12 >= @min AND @salary/12 <= @max AND (@salary <= @manager_salary OR @manager_id IS NULL))
 		RETURN 1;
 	RETURN 0;
 END
@@ -770,7 +777,7 @@ ALTER TABLE dbo.Retailer
 
 ALTER TABLE dbo.Employee
 	ADD CONSTRAINT chk_Employee_salary
-	CHECK (dbo.f_checkSalary(job_id, salary) = 1);
+	CHECK (dbo.f_checkSalary(job_id, salary, manager_id) = 1);
 
 ALTER TABLE dbo.Employee
 	ADD CONSTRAINT chk_Employee_start_date

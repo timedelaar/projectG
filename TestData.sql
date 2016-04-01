@@ -16,6 +16,8 @@ INSERT INTO dbo.Job(job_number, min_salary, max_salary) values (1, 0, 5000);
 
 INSERT INTO dbo.Employee(emp_id, emp_fname, emp_lname, salary, job_id) values (1, 'Johnny', 'Test', 4000, 1);
 
+INSERT INTO dbo.Employee(emp_id, manager_id, emp_fname, emp_lname, salary, job_id) values (2, 1, 'Johnny jr.', 'Test', 4000, 1);
+
 INSERT INTO dbo.Warehouse(warehouse_id) values (1);
 
 INSERT INTO dbo.Product_type(product_type_code, product_line_code, product_type_en, inventory_minimum) values (1, NULL, 'Test items', 50);
