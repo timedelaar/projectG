@@ -793,23 +793,3 @@ ALTER TABLE dbo.Promotion
 
 GO
 
-CREATE TRIGGER tr_Orderliner_AfterInsert
-ON orderline AFTER INSERT, update
-AS
-
-DECLARE @Id int;
-select @Id = order_Id from inserted;
-
-DECLARE @quantity int;
-select @quantity = SUM(quantity) from Customer_order co JOIN Orderline o on co.order_id = o.order_id where @Id = co.order_id;
-
-DECLARE @max_quantity int;
-select @max_quantity = max_quantity_order from retailer r JOIN Retailer_site rs on r.retailer_id = rs.retailer_code where retailer_site_code = 
-(select retailer_site_code from Customer_order where order_id = @Id);
-
-
-
-if @quantity > @max_quantity
-PRINT 'te veel';
-GO
-
