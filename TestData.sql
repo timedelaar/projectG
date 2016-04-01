@@ -28,7 +28,7 @@ INSERT INTO dbo.Product(product_id, introduction_date, production_cost, margin, 
 
 INSERT INTO dbo.Inventory_level(warehouse_id, product_id, inventory_count) values (1, 1, 50);
 
-INSERT INTO dbo.Customer_order(order_id, retailer_site_code, sales_rep, warehouse_code) values(1, 2, 1, 1);
+INSERT INTO dbo.Customer_order(order_id, retailer_site_code, sales_rep, warehouse_code, order_status) values(1, 2, 1, 1, NULL);
 
 INSERT INTO dbo.Orderline values (1, 10, 10, 13, 12.50, NULL, 1, 1);
 

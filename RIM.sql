@@ -290,7 +290,7 @@ region				NVARCHAR(255)	NULL,
 sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
 warehouse_code		INT				NULL,
-order_status		NVARCHAR(50)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verwerkt' OR order_status = 'verzonden'),
+order_status		NVARCHAR(50)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verzonden'),
 CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
 );
@@ -769,6 +769,26 @@ UPDATE dbo.Employee
 SET job_id = (SELECT job_number FROM dbo.Job WHERE job_title LIKE '%Manager%')
 WHERE emp_id = (SELECT branch_head_id FROM inserted);
 
+GO
+
+CREATE TRIGGER trg_Customer_order_status ON dbo.Customer_order AFTER UPDATE
+AS
+DECLARE @old_status NVARCHAR(50);
+DECLARE @new_status NVARCHAR(50);
+SELECT @old_status = order_status FROM deleted;
+SELECT @new_status = order_status FROM inserted;
+
+IF @old_status = @new_status
+	RETURN;
+
+IF @old_status IS NULL AND @new_status != 'ontvangen'
+	ROLLBACK TRAN;
+
+IF @new_status = 'wordt samengesteld' AND @old_status != 'ontvangen'
+	ROLLBACK TRAN;
+
+IF @new_status = 'verzonden' AND @old_status != 'wordt samengesteld'
+	ROLLBACK TRAN;
 GO
 
 ALTER TABLE dbo.Retailer
