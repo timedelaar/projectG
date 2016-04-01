@@ -290,6 +290,7 @@ region				NVARCHAR(255)	NULL,
 sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
 warehouse_code		INT				NULL,
+order_status		NVARCHAR(50)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verwerkt' OR order_status = 'verzonden'),
 CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
 );
@@ -710,16 +711,16 @@ IF OBJECT_ID('dbo.f_checkSalary', 'FN') IS NOT NULL
 
 GO
 
-CREATE FUNCTION dbo.f_checkSalary(@job_id INT, @salary DECIMAL(15,2))
+CREATE FUNCTION dbo.f_checkSalary(@job_number INT, @salary DECIMAL(15,2))
 RETURNS INT
 AS BEGIN
 	DECLARE @min DECIMAL(15,2);
 	DECLARE @max DECIMAL(15,2);
-	IF (@salary IS NULL AND @job_id IS NULL)
+	IF (@salary IS NULL AND @job_number IS NULL)
 		RETURN 1;
 	SELECT @min = min_salary, @max = max_salary
 	FROM dbo.Job
-	WHERE job_id = @job_id;
+	WHERE job_number = @job_number;
 	IF (@salary/12 >= @min AND @salary/12 <= @max)
 		RETURN 1;
 	RETURN 0;

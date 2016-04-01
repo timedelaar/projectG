@@ -4,7 +4,7 @@ INSERT INTO dbo.Country(country_code, country, language, currency_name) values (
 
 INSERT INTO dbo.Retailer_type(retailer_type_code, type_name_en) values (1, 'Test shop');
 
-INSERT INTO dbo.Retailer values (1, 'Big test', 'b', 20, NULL, 1);
+INSERT INTO dbo.Retailer values (1, 'Big test', 'b', 5, NULL, 1);
 
 INSERT INTO dbo.Retailer values (2, 'Small test', 's', NULL, 15, 1);
 
@@ -12,7 +12,9 @@ INSERT INTO dbo.Retailer_site(retailer_site_code, retailer_code, address1, count
 
 INSERT INTO dbo.Retailer_site(retailer_site_code, retailer_code, address1, country_code, active_indicator) values (2, 2, 'Testlane 13', 1, 1);
 
-INSERT INTO dbo.Employee(emp_id, emp_fname, emp_lname) values (1, 'Johnny', 'Test');
+INSERT INTO dbo.Job(job_number, min_salary, max_salary) values (1, 0, 5000); 
+
+INSERT INTO dbo.Employee(emp_id, emp_fname, emp_lname, salary, job_id) values (1, 'Johnny', 'Test', 4000, 1);
 
 INSERT INTO dbo.Warehouse(warehouse_id) values (1);
 
