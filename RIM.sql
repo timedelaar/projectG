@@ -24,7 +24,7 @@ IF OBJECT_ID('dbo.Supplier', 'U') IS NOT NULL
 	DROP TABLE dbo.Supplier;
 
 CREATE TABLE dbo.Supplier(
-supplier_id     	INT         	NOT NULL,
+supplier_id     	INT				NOT NULL,
 company_name        NVARCHAR(50) 	NOT NULL,
 contact_name        NVARCHAR(50) 	NOT NULL,
 contact_title       NVARCHAR(50) 	NOT NULL,
@@ -181,11 +181,11 @@ IF OBJECT_ID('dbo.Performance_review', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Performance_review(
 emp_id				INT				NOT NULL,
-review_DATE			DATE			NOT NULL,
+review_date			DATE			NOT NULL,
 bonus_awarded		NVARCHAR(1)		NOT NULL,
 bonus_amount		DECIMAL(15,5)	NULL,
 CONSTRAINT pk_Bonus
-	PRIMARY KEY (emp_id, review_DATE)
+	PRIMARY KEY (emp_id, review_date)
 );
 
 IF OBJECT_ID('dbo.Supplier_order', 'U') IS NOT NULL
@@ -210,9 +210,9 @@ CREATE TABLE dbo.Supplier_orderline(
 order_id			INT				NOT NULL,
 line_id				INT				NOT NULL,
 product_id			INT				NOT NULL,
-quantity			DATE			NOT NULL,
-unit_price			DATE			NOT NULL,
-discount			DATE			NOT NULL,
+quantity			INT				NOT NULL,
+unit_price			DECIMAL(10,2)	NOT NULL,
+discount			DECIMAL(3,2)	NOT NULL,
 CONSTRAINT pk_Supplier_orderline
 	PRIMARY KEY (order_id, line_id)
 );
@@ -222,7 +222,7 @@ IF OBJECT_ID('dbo.Returned_item', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Returned_item(
 return_code			INT				NOT NULL,
-return_DATE			DATE			NOT NULL,
+return_date			DATE			NOT NULL,
 orderline_code		INT			 	NOT NULL,
 return_reason		INT				NOT NULL,
 return_quantity		INT				NOT NULL,
@@ -245,6 +245,11 @@ IF OBJECT_ID('dbo.Warehouse', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Warehouse(
 warehouse_id		INT				NOT NULL,
+street				NVARCHAR(255)	NULL,
+city				NVARCHAR(255)	NULL,
+region				NVARCHAR(255)	NULL,
+postal_code			NVARCHAR(255)	NULL,
+phone				NVARCHAR(255)	NULL,
 CONSTRAINT pk_Warehouse
 	PRIMARY KEY (warehouse_id)
 );
@@ -279,11 +284,12 @@ IF OBJECT_ID('dbo.Customer_order', 'U') IS NOT NULL
 CREATE TABLE dbo.Customer_order(
 order_id			INT				NOT NULL,
 retailer_site_code	INT				NOT NULL,
-order_DATE			DATE		 	NULL,
+order_date			DATE		 	NULL,
 fin_code			NVARCHAR(10)	NULL,
 region				NVARCHAR(255)	NULL,
 sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
+warehouse_code		INT				NULL,
 CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
 );
@@ -417,6 +423,9 @@ IF OBJECT_ID('dbo.Salestarget', 'U') IS NOT NULL
 CREATE TABLE dbo.Salestarget(
 product_id			INT				NOT NULL,
 employee_id			INT				NOT NULL,
+target_amount		INT				NOT NULL,
+end_date			DATE			NULL,
+target_achieved		NVARCHAR(1)		NULL CHECK(target_achieved = 'Y' OR target_achieved = 'N'),
 CONSTRAINT pk_Salestarget
 	PRIMARY KEY (product_id, employee_id)
 );
@@ -493,6 +502,11 @@ ALTER TABLE dbo.Retailer_site
 	ADD CONSTRAINT fk_Retailer_site_Country
 	FOREIGN KEY(country_code)
 	REFERENCES dbo.Country(country_code);
+
+ALTER TABLE dbo.Employee
+	ADD CONSTRAINT fk_Employee_manager
+	FOREIGN KEY(manager_id)
+	REFERENCES dbo.Employee(emp_id);
 	
 ALTER TABLE dbo.Employee
 	ADD CONSTRAINT fk_Employee_Branch
@@ -585,14 +599,19 @@ ALTER TABLE dbo.Customer_order
 	REFERENCES dbo.Fin_code(code);
 
 ALTER TABLE dbo.Customer_order
+	ADD CONSTRAINT fk_Customer_order_Employee
+	FOREIGN KEY(sales_rep)
+	REFERENCES dbo.Employee(emp_id);
+
+ALTER TABLE dbo.Customer_order
 	ADD CONSTRAINT fk_Customer_order_Order_method
 	FOREIGN KEY(order_method_code)
 	REFERENCES dbo.Order_method(order_method_code);
 
 ALTER TABLE dbo.Customer_order
-	ADD CONSTRAINT fk_Customer_order_Employee
-	FOREIGN KEY(sales_rep)
-	REFERENCES dbo.Employee(emp_id);
+	ADD CONSTRAINT fk_Customer_order_Warehouse
+	FOREIGN KEY(warehouse_code)
+	REFERENCES dbo.Warehouse(warehouse_id);
 	
 ALTER TABLE dbo.Orderline
 	ADD CONSTRAINT fk_Orderline_Sales_item
@@ -706,6 +725,34 @@ AS BEGIN
 	RETURN 0;
 END
 
+GO
+
+CREATE TRIGGER trg_Orderline_Inventory ON dbo.Orderline AFTER INSERT
+AS
+	DECLARE @warehouse_id INT;
+	DECLARE @product_id INT;
+	DECLARE @current_inventory INT;
+	DECLARE @quantity INT;
+	SELECT @warehouse_id = warehouse_code FROM Customer_order c WHERE c.order_id = (SELECT order_id FROM inserted);
+	SELECT @product_id = sales_item_id FROM inserted;
+	SELECT @current_inventory = inventory_count FROM dbo.Inventory_level WHERE warehouse_id = @warehouse_id AND product_id = @product_id;
+	SELECT @quantity = quantity FROM inserted;
+
+	IF @warehouse_id IS NULL
+		RETURN;
+
+	IF (SELECT COUNT(product_id) FROM dbo.Product WHERE product_id = @product_id) = 0
+		RETURN;
+
+	IF (@quantity > @current_inventory) OR (@current_inventory IS NULL)
+	BEGIN
+		ROLLBACK TRAN;
+		RETURN;
+	END;
+
+	UPDATE dbo.Inventory_level
+	SET inventory_count = (@current_inventory - @quantity)
+	WHERE warehouse_id = @warehouse_id AND product_id = @product_id;
 GO
 
 CREATE TRIGGER trg_Branch_manager ON dbo.Branch AFTER INSERT, UPDATE
