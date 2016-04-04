@@ -48,7 +48,7 @@ company_name		NVARCHAR(255)	NULL,
 type				NVARCHAR(255)	NULL CHECK(type = 'b' OR type = 's'),
 discount			INT				NULL,
 max_quantity_order	INT				NULL,
-retailer_type_code	INT				NULL,
+retailer_type_code	INT				NOT NULL,
 CONSTRAINT pk_Retailer
 	PRIMARY KEY (retailer_id)
 );
@@ -73,7 +73,8 @@ first_name			NVARCHAR(255)	NULL,
 last_name			NVARCHAR(255)	NULL,
 address1			NVARCHAR(50)	NOT NULL,
 address2			NVARCHAR(50)	NULL,
-city				NVARCHAR(40)	NULL,			
+city				NVARCHAR(40)	NULL,	
+phone               NVARCHAR(50)    NULL,		
 region				NVARCHAR(50)	NULL,
 postal_zone			NVARCHAR(10)	NULL,
 country_code		INT				NOT NULL,
@@ -145,7 +146,7 @@ CREATE TABLE dbo.Branch(
 branch_id			INT				NOT NULL,
 branch_name			NVARCHAR(255)	NULL,
 branch_head_id		INT				NOT NULL,
-address1			INT				NOT NULL,
+address1			NVARCHAR(50)	NOT NULL,
 address2			NVARCHAR(50)	NULL,
 city				NVARCHAR(40)	NULL,			
 region				NVARCHAR(50)	NULL,
@@ -822,6 +823,17 @@ ALTER TABLE dbo.Promotion
 ALTER TABLE dbo.Employee
     ADD CONSTRAINT chk_Min_Wage
 	CHECK (Salary >= 2616)
+
+GO
+
+CREATE PROCEDURE MAX_QUANTITY
+@retailer_id AS INT, 
+@quantity AS INT OUTPUT
+
+AS 
+SELECT @quantity = max_quantity_order
+FROM Retailer
+WHERE retailer_id = @retailer_id;
 
 GO
 
