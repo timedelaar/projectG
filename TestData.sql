@@ -22,9 +22,7 @@ INSERT INTO dbo.Warehouse(warehouse_id) values (1);
 
 INSERT INTO dbo.Product_type(product_type_code, product_line_code, product_type_en, inventory_minimum) values (1, NULL, 'Test items', 50);
 
-INSERT INTO dbo.Sales_item(sales_item_id, sales_item_name) values (1, 'Test item');
-
-INSERT INTO dbo.Product(product_id, introduction_date, production_cost, margin, product_type_code) values (1, CURRENT_TIMESTAMP, 10.00, 0.3, 1);
+EXEC dbo.sp_addProduct 1, 'Test product', 'Just a test product.', 'XL', 'Blue', 'test.jpg', '2016-04-04', 0.33, 10.0, 1;
 
 INSERT INTO dbo.Inventory_level(warehouse_id, product_id, inventory_count) values (1, 1, 50);
 
