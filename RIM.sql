@@ -758,6 +758,34 @@ END
 
 GO
 
+/*
+region met branch en retailer_site
+USE [Outdoor Paradise];
+IF OBJECT_ID('dbo.checkRegion', 'FN') IS NOT NULL
+	DROP FUNCTION dbo.checkRegion;
+GO
+
+CREATE FUNCTION dbo.checkRegion(@retailer_site_code INT, @sales_rep INT)
+RETURNS INT
+AS BEGIN
+	DECLARE @region_rs NVARCHAR(50);
+	DECLARE @region_branch NVARCHAR(50);
+
+	SELECT @region_branch = Branch.region
+	FROM dbo.Employee JOIN dbo.Branch on Employee.branch_id = Branch.branch_id 
+	WHERE emp_id = @sales_rep;	
+	
+	SELECT @region_rs = region 
+	FROM dbo.Retailer_site
+	WHERE retailer_site_code = @retailer_site_code;
+
+	IF (@region_branch = @region_rs)
+		RETURN 1;
+	RETURN 0;
+END
+GO
+*/
+
 CREATE TRIGGER trg_Orderline_Inventory ON dbo.Orderline AFTER INSERT
 AS
 	DECLARE @warehouse_id INT;
@@ -845,6 +873,11 @@ ALTER TABLE dbo.Promotion
 ALTER TABLE dbo.Employee
     ADD CONSTRAINT chk_Min_Wage
 	CHECK (Salary >= 2616)
+/*
+ALTER TABLE dbo.Customer_order
+	ADD CONSTRAINT chk_Order_Region
+	CHECK (dbo.checkRegion(retailer_site_code, sales_rep) = 1);
+*/
 
 GO
 
