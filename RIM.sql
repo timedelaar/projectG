@@ -439,8 +439,7 @@ trip_id				INT				NOT NULL,
 trip_price			DECIMAL(10,2)	NOT NULL,
 min_participants	INT				NOT NULL,
 max_participants	INT				NOT NULL,
-booker_detail_id	INT				NOT NULL,
-promotion_id		INT				NOT NULL,
+promotion_id		INT			    NULL,
 children			BIT				NOT NULL,
 CONSTRAINT pk_Trip
 	PRIMARY KEY (trip_id)
