@@ -352,10 +352,9 @@ description			NVARCHAR(255)	NULL,
 prod_size			NVARCHAR(255)	NULL,
 color				NVARCHAR(255)	NULL,
 picture_name		NVARCHAR(255)	NULL,
-category			NVARCHAR(1)		NULL,
 introduction_date	DATE			NOT NULL,
+margin				DECIMAL(3,2)	NOT NULL,
 production_cost		DECIMAL(15,5)	NOT NULL,
-margin				DECIMAL(5,4)	NOT NULL,
 product_type_code	INT				NOT NULL,
 CONSTRAINT pk_Product
 	PRIMARY KEY (product_id)
@@ -687,6 +686,30 @@ ALTER TABLE dbo.Cotraveller
 
 GO
 
+IF OBJECT_ID('dbo.sp_addProduct', 'P') IS NOT NULL
+	DROP PROC dbo.sp_addProduct;
+
+GO
+
+CREATE PROCEDURE dbo.sp_addProduct
+	@id AS INT,
+	@name AS NVARCHAR(255),
+	@description AS NVARCHAR(255),
+	@size AS NVARCHAR(255),
+	@color AS NVARCHAR(255),
+	@picture_name AS NVARCHAR(255),
+	@introduction_date AS DATE,
+	@margin AS DECIMAL(3,2),
+	@production_cost AS DECIMAL(15,2),
+	@product_type_code AS INT
+AS
+BEGIN
+	SET NOCOUNT ON;
+	INSERT INTO dbo.Sales_item VALUES (@id, @name);
+	INSERT INTO dbo.Product VALUES (@id, @description, @size, @color, @picture_name, @introduction_date, @margin, @production_cost, @product_type_code);
+END
+GO
+
 USE [Outdoor Paradise];
 
 IF OBJECT_ID('dbo.f_getNumSubordinates', 'FN') IS NOT NULL
@@ -735,6 +758,34 @@ AS BEGIN
 END
 
 GO
+
+/*
+region met branch en retailer_site
+USE [Outdoor Paradise];
+IF OBJECT_ID('dbo.checkRegion', 'FN') IS NOT NULL
+	DROP FUNCTION dbo.checkRegion;
+GO
+
+CREATE FUNCTION dbo.checkRegion(@retailer_site_code INT, @sales_rep INT)
+RETURNS INT
+AS BEGIN
+	DECLARE @region_rs NVARCHAR(50);
+	DECLARE @region_branch NVARCHAR(50);
+
+	SELECT @region_branch = Branch.region
+	FROM dbo.Employee JOIN dbo.Branch on Employee.branch_id = Branch.branch_id 
+	WHERE emp_id = @sales_rep;	
+	
+	SELECT @region_rs = region 
+	FROM dbo.Retailer_site
+	WHERE retailer_site_code = @retailer_site_code;
+
+	IF (@region_branch = @region_rs)
+		RETURN 1;
+	RETURN 0;
+END
+GO
+*/
 
 CREATE TRIGGER trg_Orderline_Inventory ON dbo.Orderline AFTER INSERT
 AS
@@ -823,6 +874,11 @@ ALTER TABLE dbo.Promotion
 ALTER TABLE dbo.Employee
     ADD CONSTRAINT chk_Min_Wage
 	CHECK (Salary >= 2616)
+/*
+ALTER TABLE dbo.Customer_order
+	ADD CONSTRAINT chk_Order_Region
+	CHECK (dbo.checkRegion(retailer_site_code, sales_rep) = 1);
+*/
 
 GO
 
