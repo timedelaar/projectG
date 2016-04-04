@@ -819,5 +819,9 @@ ALTER TABLE dbo.Promotion
     ADD CONSTRAINT chk_Promotion_ValidDate
 	CHECK (end_date > start_date);
 
+ALTER TABLE dbo.Employee
+    ADD CONSTRAINT chk_Min_Wage
+	CHECK (Salary >= 2616)
+
 GO
 
