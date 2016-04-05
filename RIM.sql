@@ -907,6 +907,26 @@ INSERT INTO dbo.Processed_customer_order SELECT * FROM Customer_order WHERE orde
 
 GO
 
+CREATE TRIGGER trg_Bonus_Target ON dbo.Salestarget AFTER INSERT, UPDATE
+AS
+	DECLARE @employee_id INT;
+	DECLARE @target_achieved NVARCHAR(50);
+	DECLARE @amount NVARCHAR(50);
+
+	SELECT @employee_id = employee_id FROM inserted;
+	SELECT @target_achieved = target_achieved FROM inserted;
+
+	SELECT @amount = COUNT(target_achieved) FROM dbo.Salestarget 
+			WHERE employee_id = @employee_id AND target_achieved = 'N';
+
+	IF (@amount >= 6)
+	BEGIN
+		PRINT 'You failed more than six targets!';
+		ROLLBACK TRAN;
+		RETURN;
+	END;
+GO
+
 ALTER TABLE dbo.Retailer
 	ADD CONSTRAINT chk_Retailer_type
 	CHECK ((type = 'b' AND discount IS NOT NULL AND max_quantity_order IS NULL) OR (type = 's' AND discount IS NULL AND max_quantity_order IS NOT NULL));
