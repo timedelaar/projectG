@@ -300,6 +300,22 @@ CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
 );
 
+IF OBJECT_ID('dbo.Processed_customer_order', 'U') IS NOT NULL
+	DROP TABLE dbo.Processed_customer_order;
+CREATE TABLE dbo.Processed_customer_order(
+order_id			INT				NOT NULL,
+retailer_site_code	INT				NOT NULL,
+order_date			DATE		 	NULL,
+fin_code			NVARCHAR(10)	NULL,
+region				NVARCHAR(255)	NULL,
+sales_rep			INT				NOT NULL,
+order_method_code	INT				NULL,
+warehouse_code		INT				NULL,
+order_status		NVARCHAR(50)	NULL,
+CONSTRAINT pk_Processed_customer_order
+	PRIMARY KEY (order_id)
+);
+
 IF OBJECT_ID('dbo.Orderline', 'U') IS NOT NULL
 	DROP TABLE dbo.Orderline;
 
@@ -800,8 +816,8 @@ END
 
 GO
 
-/*
-region met branch en retailer_site
+
+/*region met branch en retailer_site*/
 USE [Outdoor Paradise];
 IF OBJECT_ID('dbo.checkRegion', 'FN') IS NOT NULL
 	DROP FUNCTION dbo.checkRegion;
@@ -826,7 +842,7 @@ AS BEGIN
 	RETURN 0;
 END
 GO
-*/
+
 
 CREATE TRIGGER trg_Orderline_Inventory ON dbo.Orderline AFTER INSERT
 AS
@@ -884,6 +900,13 @@ IF @new_status = 'verzonden' AND @old_status != 'wordt samengesteld'
 	ROLLBACK TRAN;
 GO
 
+CREATE TRIGGER trg_order_status ON dbo.Customer_order AFTER INSERT, UPDATE
+AS
+
+INSERT INTO dbo.Processed_customer_order SELECT * FROM Customer_order WHERE order_status ='verwerkt' AND order_id NOT IN (SELECT order_id FROM Processed_customer_order) ;
+
+GO
+
 ALTER TABLE dbo.Retailer
 	ADD CONSTRAINT chk_Retailer_type
 	CHECK ((type = 'b' AND discount IS NOT NULL AND max_quantity_order IS NULL) OR (type = 's' AND discount IS NULL AND max_quantity_order IS NOT NULL));
@@ -915,15 +938,15 @@ ALTER TABLE dbo.Promotion
 ALTER TABLE dbo.Employee
     ADD CONSTRAINT chk_Min_Wage
 	CHECK (Salary >= 2616)
-/*
+
 ALTER TABLE dbo.Customer_order
 	ADD CONSTRAINT chk_Order_Region
 	CHECK (dbo.checkRegion(retailer_site_code, sales_rep) = 1);
-*/
+
 
 GO
 
-CREATE PROCEDURE MAX_QUANTITY_SMALLCUSTOMER
+CREATE PROCEDURE dbo.sp_CHK_MAX_QTY_SCUST
 @retailer_id AS INT, 
 @quantity AS INT OUTPUT
 
