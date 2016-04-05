@@ -441,13 +441,24 @@ IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Trip(
 trip_id				INT				NOT NULL,
-trip_price			DECIMAL(10,2)	NOT NULL,
 min_participants	INT				NOT NULL,
 max_participants	INT				NOT NULL,
-promotion_id		INT			    NULL,
+promotion_id		INT				NULL,
 children			BIT				NOT NULL,
+trip_price			DECIMAL(10,2)	NOT NULL,
 CONSTRAINT pk_Trip
 	PRIMARY KEY (trip_id)
+);
+
+IF OBJECT_ID('dbo.Booking', 'U') IS NOT NULL
+	DROP TABLE dbo.Booking;
+
+CREATE TABLE dbo.Booking(
+trip_id				INT				NOT NULL,
+booker_id			INT				NOT NULL,
+date				DATE			NOT NULL,
+CONSTRAINT pk_Booking
+	PRIMARY KEY(trip_id, booker_id, date)
 );
 
 IF OBJECT_ID('dbo.Cotraveller', 'U') IS NOT NULL
@@ -674,14 +685,19 @@ ALTER TABLE dbo.Trip
 	REFERENCES dbo.Sales_item(sales_item_id);
 	
 ALTER TABLE dbo.Trip
-	ADD CONSTRAINT fk_Trip_Booker_detail
-	FOREIGN KEY(booker_detail_id)
-	REFERENCES dbo.Booker_detail(booker_detail_id);
-	
-ALTER TABLE dbo.Trip
 	ADD CONSTRAINT fk_Trip_Booker_Promotion
 	FOREIGN KEY(promotion_id)
 	REFERENCES dbo.Promotion(promotion_id);
+
+ALTER TABLE dbo.Booking
+	ADD CONSTRAINT fk_Booking_Trip
+	FOREIGN KEY(trip_id)
+	REFERENCES dbo.Trip(trip_id);
+
+ALTER TABLE dbo.Booking
+	ADD CONSTRAINT fk_Booking_Booker_detail
+	FOREIGN KEY(booker_id)
+	REFERENCES dbo.Booker_detail(booker_detail_id);
 	
 ALTER TABLE dbo.Cotraveller
 	ADD CONSTRAINT fk_Cotraveller_Trip
@@ -711,6 +727,27 @@ BEGIN
 	SET NOCOUNT ON;
 	INSERT INTO dbo.Sales_item VALUES (@id, @name);
 	INSERT INTO dbo.Product VALUES (@id, @description, @size, @color, @picture_name, @introduction_date, @margin, @production_cost, @product_type_code);
+END
+GO
+
+IF OBJECT_ID('dbo.sp_addTrip', 'P') IS NOT NULL
+	DROP PROC dbo.sp_addTrip;
+
+GO
+
+CREATE PROCEDURE dbo.sp_addTrip
+	@id AS INT,
+	@name AS NVARCHAR(255),
+	@min_participants AS INT,
+	@max_participants AS INT,
+	@promotion_id AS INT,
+	@children AS BIT,
+	@trip_price AS DECIMAL(10,2)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	INSERT INTO dbo.Sales_item VALUES (@id, @name);
+	INSERT INTO dbo.Trip VALUES (@id, @min_participants, @max_participants, @promotion_id, @children, @trip_price);
 END
 GO
 

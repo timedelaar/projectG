@@ -24,6 +24,8 @@ INSERT INTO dbo.Product_type(product_type_code, product_line_code, product_type_
 
 EXEC dbo.sp_addProduct 1, 'Test product', 'Just a test product.', 'XL', 'Blue', 'test.jpg', '2016-04-04', 0.33, 10.0, 1;
 
+EXEC dbo.sp_addTrip 2, 'Test trip', 1, 10, NULL, 1, 350.0;
+
 INSERT INTO dbo.Inventory_level(warehouse_id, product_id, inventory_count) values (1, 1, 50);
 
 INSERT INTO dbo.Customer_order(order_id, retailer_site_code, sales_rep, warehouse_code, order_status) values(1, 2, 1, 1, NULL);
