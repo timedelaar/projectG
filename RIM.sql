@@ -45,7 +45,7 @@ IF OBJECT_ID('dbo.Retailer', 'U') IS NOT NULL
 CREATE TABLE dbo.Retailer(
 retailer_id			INT				NOT NULL,
 company_name		NVARCHAR(255)	NULL,
-type				NVARCHAR(255)	NULL CHECK(type = 'b' OR type = 's'),
+type				NVARCHAR(1)	NULL CHECK(type = 'b' OR type = 's'),
 discount			INT				NULL,
 max_quantity_order	INT				NULL,
 retailer_type_code	INT				NOT NULL,
@@ -58,7 +58,7 @@ IF OBJECT_ID('dbo.Retailer_type', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Retailer_type(
 retailer_type_code	INT				NOT NULL,
-type_name_en		NVARCHAR(50)	NOT NULL,
+type_name_en		NVARCHAR(25)	NOT NULL,
 CONSTRAINT pk_Retailer_type
 	PRIMARY KEY (retailer_type_code)
 );
@@ -89,7 +89,7 @@ IF OBJECT_ID('dbo.Employee', 'U') IS NOT NULL
 CREATE TABLE dbo.Employee(
 emp_id				INT				NOT NULL,
 manager_id			INT				NULL,
-emp_fname			NVARCHAR(255)	NOT NULL,
+emp_fname			NVARCHAR(255)	NULL,
 emp_lname			NVARCHAR(255)	NULL,
 branch_id			INT				NULL,			
 street				NVARCHAR(255)	NULL,
@@ -97,7 +97,10 @@ city				NVARCHAR(255)	NULL,
 region				NVARCHAR(255)	NULL,
 postal_code			NVARCHAR(255)	NULL,
 phone				NVARCHAR(255)	NULL,
-status				NVARCHAR(255)	NULL,
+fax			     	NVARCHAR(255)	NULL,
+email				NVARCHAR(255)	NULL,
+position_en			NVARCHAR(255)	NULL,
+status				NVARCHAR(5)	NULL,
 ss_number			NVARCHAR(255)	NULL,
 salary				DECIMAL(15,2)	NULL,
 job_id				INT				NULL,
@@ -145,7 +148,7 @@ IF OBJECT_ID('dbo.Branch', 'U') IS NOT NULL
 CREATE TABLE dbo.Branch(
 branch_id			INT				NOT NULL,
 branch_name			NVARCHAR(255)	NULL,
-branch_head_id		INT				NOT NULL,
+branch_head_id		INT				NULL,
 address1			NVARCHAR(50)	NOT NULL,
 address2			NVARCHAR(50)	NULL,
 city				NVARCHAR(40)	NULL,			
@@ -213,7 +216,7 @@ line_id				INT				NOT NULL,
 product_id			INT				NOT NULL,
 quantity			INT				NOT NULL,
 unit_price			DECIMAL(10,2)	NOT NULL,
-discount			DECIMAL(3,2)	NOT NULL,
+discount			DECIMAL(3,3)	NOT NULL,
 CONSTRAINT pk_Supplier_orderline
 	PRIMARY KEY (order_id, line_id)
 );
@@ -246,11 +249,12 @@ IF OBJECT_ID('dbo.Warehouse', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Warehouse(
 warehouse_id		INT				NOT NULL,
-street				NVARCHAR(255)	NULL,
-city				NVARCHAR(255)	NULL,
-region				NVARCHAR(255)	NULL,
-postal_code			NVARCHAR(255)	NULL,
-phone				NVARCHAR(255)	NULL,
+address				NVARCHAR(50)	NULL,
+surface             NVARCHAR(15)    NULL,
+city				NVARCHAR(30)	NULL,
+region				NVARCHAR(30)	NULL,
+postal_code			NVARCHAR(10)	NULL,
+phone				NVARCHAR(20)	NULL,
 CONSTRAINT pk_Warehouse
 	PRIMARY KEY (warehouse_id)
 );
@@ -291,7 +295,7 @@ region				NVARCHAR(255)	NULL,
 sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
 warehouse_code		INT				NULL,
-order_status		NVARCHAR(50)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verzonden'),
+order_status		NVARCHAR(25)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verzonden'),
 CONSTRAINT pk_Customer_order
 	PRIMARY KEY (order_id)
 );
@@ -317,7 +321,7 @@ IF OBJECT_ID('dbo.Fin_code', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Fin_code(
 code				NVARCHAR(10)	NOT NULL,
-type				NVARCHAR(255)	NULL,
+type				NVARCHAR(50)	NULL,
 description			NVARCHAR(255)	NULL,
 CONSTRAINT pk_Fin_code
 	PRIMARY KEY (code)
@@ -338,7 +342,7 @@ IF OBJECT_ID('dbo.Sales_item', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Sales_item(
 sales_item_id		INT				NOT NULL,
-sales_item_name		NVARCHAR(255)	NOT NULL,
+sales_item_name		NVARCHAR(255)	NULL,
 CONSTRAINT pk_Sales_item
 	PRIMARY KEY (sales_item_id)
 );
@@ -349,9 +353,9 @@ IF OBJECT_ID('dbo.Product', 'U') IS NOT NULL
 CREATE TABLE dbo.Product(
 product_id			INT				NOT NULL,
 description			NVARCHAR(255)	NULL,
-prod_size			NVARCHAR(255)	NULL,
-color				NVARCHAR(255)	NULL,
-picture_name		NVARCHAR(255)	NULL,
+prod_size			NVARCHAR(25)	NULL,
+color				NVARCHAR(30)	NULL,
+picture_name		NVARCHAR(50)	NULL,
 introduction_date	DATE			NOT NULL,
 margin				DECIMAL(3,2)	NOT NULL,
 production_cost		DECIMAL(15,5)	NOT NULL,
@@ -424,11 +428,12 @@ IF OBJECT_ID('dbo.Salestarget', 'U') IS NOT NULL
 CREATE TABLE dbo.Salestarget(
 product_id			INT				NOT NULL,
 employee_id			INT				NOT NULL,
-target_amount		INT				NOT NULL,
-end_date			DATE			NULL,
+sales_target		INT				NOT NULL,
+sales_year			INT		     	NOT NULL,
+sales_period		INT		     	NOT NULL,
 target_achieved		NVARCHAR(1)		NULL CHECK(target_achieved = 'Y' OR target_achieved = 'N'),
 CONSTRAINT pk_Salestarget
-	PRIMARY KEY (product_id, employee_id)
+	PRIMARY KEY (product_id, employee_id, sales_year, sales_period)
 );
 
 IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL
@@ -881,7 +886,7 @@ ALTER TABLE dbo.Customer_order
 
 GO
 
-CREATE PROCEDURE MAX_QUANTITY
+CREATE PROCEDURE MAX_QUANTITY_SMALLCUSTOMER
 @retailer_id AS INT, 
 @quantity AS INT OUTPUT
 
