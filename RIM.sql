@@ -977,3 +977,16 @@ WHERE retailer_id = @retailer_id;
 
 GO
 
+CREATE UNIQUE INDEX FindEmpName
+ON Employee (emp_fname, emp_lname)
+
+CREATE UNIQUE INDEX FindRetailerSiteAdress
+ON Retailer_site (address1)
+
+CREATE NONCLUSTERED INDEX FindProductSize
+ON Product (prod_size)
+WHERE prod_size IS NOT NULL; 
+
+CREATE NONCLUSTERED INDEX FindNewOrders
+ON Customer_order (order_status)
+WHERE order_status ='ontvangen'; 
