@@ -45,10 +45,10 @@ IF OBJECT_ID('dbo.Retailer', 'U') IS NOT NULL
 CREATE TABLE dbo.Retailer(
 retailer_id			INT				NOT NULL,
 company_name		NVARCHAR(255)	NULL,
-type				NVARCHAR(255)	NULL CHECK(type = 'b' OR type = 's'),
+type				NVARCHAR(1)	NULL CHECK(type = 'b' OR type = 's'),
 discount			INT				NULL,
 max_quantity_order	INT				NULL,
-retailer_type_code	INT				NOT NULL,
+retailer_type_code	INT				NULL,
 CONSTRAINT pk_Retailer
 	PRIMARY KEY (retailer_id)
 );
@@ -58,7 +58,7 @@ IF OBJECT_ID('dbo.Retailer_type', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Retailer_type(
 retailer_type_code	INT				NOT NULL,
-type_name_en		NVARCHAR(50)	NOT NULL,
+type_name_en		NVARCHAR(25)	NOT NULL,
 CONSTRAINT pk_Retailer_type
 	PRIMARY KEY (retailer_type_code)
 );
@@ -89,7 +89,7 @@ IF OBJECT_ID('dbo.Employee', 'U') IS NOT NULL
 CREATE TABLE dbo.Employee(
 emp_id				INT				NOT NULL,
 manager_id			INT				NULL,
-emp_fname			NVARCHAR(255)	NOT NULL,
+emp_fname			NVARCHAR(255)	NULL,
 emp_lname			NVARCHAR(255)	NULL,
 branch_id			INT				NULL,			
 street				NVARCHAR(255)	NULL,
@@ -97,7 +97,9 @@ city				NVARCHAR(255)	NULL,
 region				NVARCHAR(255)	NULL,
 postal_code			NVARCHAR(255)	NULL,
 phone				NVARCHAR(255)	NULL,
-status				NVARCHAR(255)	NULL,
+fax			     	NVARCHAR(255)	NULL,
+email				NVARCHAR(255)	NULL,
+status				NVARCHAR(5)		NULL,
 ss_number			NVARCHAR(255)	NULL,
 salary				DECIMAL(15,2)	NULL,
 job_id				INT				NULL,
@@ -118,7 +120,7 @@ IF OBJECT_ID('dbo.Job', 'U') IS NOT NULL
 	DROP TABLE dbo.Job;
 
 CREATE TABLE dbo.Job(
-job_number			INT	IDENTITY	NOT NULL,
+job_number			INT				NOT NULL,
 job_id				NVARCHAR(10)	NULL,
 job_title			NVARCHAR(50)	NULL,
 min_salary			DECIMAL(15,2)	NULL,
@@ -145,7 +147,7 @@ IF OBJECT_ID('dbo.Branch', 'U') IS NOT NULL
 CREATE TABLE dbo.Branch(
 branch_id			INT				NOT NULL,
 branch_name			NVARCHAR(255)	NULL,
-branch_head_id		INT				NOT NULL,
+branch_head_id		INT				NULL,
 address1			NVARCHAR(50)	NOT NULL,
 address2			NVARCHAR(50)	NULL,
 city				NVARCHAR(40)	NULL,			
@@ -183,10 +185,10 @@ IF OBJECT_ID('dbo.Performance_review', 'U') IS NOT NULL
 CREATE TABLE dbo.Performance_review(
 emp_id				INT				NOT NULL,
 review_date			DATE			NOT NULL,
+bonus_amount		DECIMAL(15,5)	NOT NULL,
 bonus_awarded		NVARCHAR(1)		NOT NULL,
-bonus_amount		DECIMAL(15,5)	NULL,
 CONSTRAINT pk_Bonus
-	PRIMARY KEY (emp_id, review_date)
+	PRIMARY KEY (emp_id, review_date, bonus_amount)
 );
 
 IF OBJECT_ID('dbo.Supplier_order', 'U') IS NOT NULL
@@ -213,7 +215,7 @@ line_id				INT				NOT NULL,
 product_id			INT				NOT NULL,
 quantity			INT				NOT NULL,
 unit_price			DECIMAL(10,2)	NOT NULL,
-discount			DECIMAL(3,2)	NOT NULL,
+discount			DECIMAL(3,3)	NOT NULL,
 CONSTRAINT pk_Supplier_orderline
 	PRIMARY KEY (order_id, line_id)
 );
@@ -246,11 +248,12 @@ IF OBJECT_ID('dbo.Warehouse', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Warehouse(
 warehouse_id		INT				NOT NULL,
-street				NVARCHAR(255)	NULL,
-city				NVARCHAR(255)	NULL,
-region				NVARCHAR(255)	NULL,
-postal_code			NVARCHAR(255)	NULL,
-phone				NVARCHAR(255)	NULL,
+address				NVARCHAR(50)	NULL,
+surface             NVARCHAR(15)    NULL,
+city				NVARCHAR(30)	NULL,
+region				NVARCHAR(30)	NULL,
+postal_code			NVARCHAR(10)	NULL,
+phone				NVARCHAR(20)	NULL,
 CONSTRAINT pk_Warehouse
 	PRIMARY KEY (warehouse_id)
 );
@@ -291,8 +294,24 @@ region				NVARCHAR(255)	NULL,
 sales_rep			INT				NOT NULL,
 order_method_code	INT				NULL,
 warehouse_code		INT				NULL,
-order_status		NVARCHAR(50)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verzonden'),
+order_status		NVARCHAR(25)	NULL CHECK(order_status = 'ontvangen' OR order_status = 'wordt samengesteld' OR order_status = 'verzonden'),
 CONSTRAINT pk_Customer_order
+	PRIMARY KEY (order_id)
+);
+
+IF OBJECT_ID('dbo.Processed_customer_order', 'U') IS NOT NULL
+	DROP TABLE dbo.Processed_customer_order;
+CREATE TABLE dbo.Processed_customer_order(
+order_id			INT				NOT NULL,
+retailer_site_code	INT				NOT NULL,
+order_date			DATE		 	NULL,
+fin_code			NVARCHAR(10)	NULL,
+region				NVARCHAR(255)	NULL,
+sales_rep			INT				NOT NULL,
+order_method_code	INT				NULL,
+warehouse_code		INT				NULL,
+order_status		NVARCHAR(50)	NULL,
+CONSTRAINT pk_Processed_customer_order
 	PRIMARY KEY (order_id)
 );
 
@@ -317,7 +336,7 @@ IF OBJECT_ID('dbo.Fin_code', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Fin_code(
 code				NVARCHAR(10)	NOT NULL,
-type				NVARCHAR(255)	NULL,
+type				NVARCHAR(50)	NULL,
 description			NVARCHAR(255)	NULL,
 CONSTRAINT pk_Fin_code
 	PRIMARY KEY (code)
@@ -338,7 +357,7 @@ IF OBJECT_ID('dbo.Sales_item', 'U') IS NOT NULL
 
 CREATE TABLE dbo.Sales_item(
 sales_item_id		INT				NOT NULL,
-sales_item_name		NVARCHAR(255)	NOT NULL,
+sales_item_name		NVARCHAR(255)	NULL,
 CONSTRAINT pk_Sales_item
 	PRIMARY KEY (sales_item_id)
 );
@@ -349,9 +368,9 @@ IF OBJECT_ID('dbo.Product', 'U') IS NOT NULL
 CREATE TABLE dbo.Product(
 product_id			INT				NOT NULL,
 description			NVARCHAR(255)	NULL,
-prod_size			NVARCHAR(255)	NULL,
-color				NVARCHAR(255)	NULL,
-picture_name		NVARCHAR(255)	NULL,
+prod_size			NVARCHAR(25)	NULL,
+color				NVARCHAR(30)	NULL,
+picture_name		NVARCHAR(50)	NULL,
 introduction_date	DATE			NOT NULL,
 margin				DECIMAL(3,2)	NOT NULL,
 production_cost		DECIMAL(15,5)	NOT NULL,
@@ -424,11 +443,12 @@ IF OBJECT_ID('dbo.Salestarget', 'U') IS NOT NULL
 CREATE TABLE dbo.Salestarget(
 product_id			INT				NOT NULL,
 employee_id			INT				NOT NULL,
-target_amount		INT				NOT NULL,
-end_date			DATE			NULL,
+sales_target		INT				NOT NULL,
+sales_year			INT		     	NOT NULL,
+sales_period		INT		     	NOT NULL,
 target_achieved		NVARCHAR(1)		NULL CHECK(target_achieved = 'Y' OR target_achieved = 'N'),
 CONSTRAINT pk_Salestarget
-	PRIMARY KEY (product_id, employee_id)
+	PRIMARY KEY (product_id, employee_id, sales_year, sales_period)
 );
 
 IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL
@@ -795,9 +815,8 @@ END
 
 GO
 
-/*
-region met branch en retailer_site
 USE [OutdoorParadise];
+
 IF OBJECT_ID('dbo.checkRegion', 'FN') IS NOT NULL
 	DROP FUNCTION dbo.checkRegion;
 GO
@@ -821,7 +840,7 @@ AS BEGIN
 	RETURN 0;
 END
 GO
-*/
+
 
 CREATE TRIGGER trg_Orderline_Inventory ON dbo.Orderline AFTER INSERT
 AS
@@ -879,6 +898,33 @@ IF @new_status = 'verzonden' AND @old_status != 'wordt samengesteld'
 	ROLLBACK TRAN;
 GO
 
+CREATE TRIGGER trg_order_status ON dbo.Customer_order AFTER INSERT, UPDATE
+AS
+
+INSERT INTO dbo.Processed_customer_order SELECT * FROM Customer_order WHERE order_status ='verwerkt' AND order_id NOT IN (SELECT order_id FROM Processed_customer_order) ;
+
+GO
+
+CREATE TRIGGER trg_Bonus_Target ON dbo.Salestarget AFTER INSERT, UPDATE
+AS
+	DECLARE @employee_id INT;
+	DECLARE @target_achieved NVARCHAR(50);
+	DECLARE @amount NVARCHAR(50);
+
+	SELECT @employee_id = employee_id FROM inserted;
+	SELECT @target_achieved = target_achieved FROM inserted;
+
+	SELECT @amount = COUNT(target_achieved) FROM dbo.Salestarget 
+			WHERE employee_id = @employee_id AND target_achieved = 'N';
+
+	IF (@amount >= 6)
+	BEGIN
+		PRINT 'You failed more than six targets!';
+		ROLLBACK TRAN;
+		RETURN;
+	END;
+GO
+
 ALTER TABLE dbo.Retailer
 	ADD CONSTRAINT chk_Retailer_type
 	CHECK ((type = 'b' AND discount IS NOT NULL AND max_quantity_order IS NULL) OR (type = 's' AND discount IS NULL AND max_quantity_order IS NOT NULL));
@@ -910,15 +956,20 @@ ALTER TABLE dbo.Promotion
 ALTER TABLE dbo.Employee
     ADD CONSTRAINT chk_Min_Wage
 	CHECK (Salary >= 2616)
-/*
+
 ALTER TABLE dbo.Customer_order
 	ADD CONSTRAINT chk_Order_Region
 	CHECK (dbo.checkRegion(retailer_site_code, sales_rep) = 1);
-*/
+
 
 GO
 
-CREATE PROCEDURE MAX_QUANTITY
+IF OBJECT_ID('dbo.sp_CHK_MAX_QTY_SCUST', 'P') IS NOT NULL
+	DROP PROCEDURE dbo.sp_CHK_MAX_QTY_SCUST;
+
+GO
+
+CREATE PROCEDURE dbo.sp_CHK_MAX_QTY_SCUST
 @retailer_id AS INT, 
 @quantity AS INT OUTPUT
 
@@ -929,3 +980,16 @@ WHERE retailer_id = @retailer_id;
 
 GO
 
+CREATE INDEX FindEmpName
+ON Employee (emp_fname, emp_lname)
+
+CREATE INDEX FindRetailerSiteAdress
+ON Retailer_site (address1)
+
+CREATE NONCLUSTERED INDEX FindProductSize
+ON Product (prod_size)
+WHERE prod_size IS NOT NULL; 
+
+CREATE NONCLUSTERED INDEX FindNewOrders
+ON Customer_order (order_status)
+WHERE order_status ='ontvangen'; 
