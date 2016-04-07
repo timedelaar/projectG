@@ -1,4 +1,4 @@
-USE [Outdoor Paradise];
+USE OutdoorParadise;
 
 DECLARE @sql NVARCHAR(MAX);
 SET @sql = N'';
@@ -18,7 +18,7 @@ ORDER BY c.[type];
 --PRINT @sql;
 EXEC sys.sp_executesql @sql;
 
-USE [Outdoor Paradise];
+USE [OutdoorParadise];
 
 IF OBJECT_ID('dbo.Supplier', 'U') IS NOT NULL
 	DROP TABLE dbo.Supplier;
@@ -118,7 +118,7 @@ IF OBJECT_ID('dbo.Job', 'U') IS NOT NULL
 	DROP TABLE dbo.Job;
 
 CREATE TABLE dbo.Job(
-job_number			INT				NOT NULL,
+job_number			INT	IDENTITY	NOT NULL,
 job_id				NVARCHAR(10)	NULL,
 job_title			NVARCHAR(50)	NULL,
 min_salary			DECIMAL(15,2)	NULL,
@@ -746,7 +746,7 @@ BEGIN
 END
 GO
 
-USE [Outdoor Paradise];
+USE [OutdoorParadise];
 
 IF OBJECT_ID('dbo.f_getNumSubordinates', 'FN') IS NOT NULL
 	DROP FUNCTION dbo.f_getNumSubordinates;
@@ -764,7 +764,7 @@ AS BEGIN
 END
 GO
 
-USE [Outdoor Paradise];
+USE [OutdoorParadise];
 
 IF OBJECT_ID('dbo.f_checkSalary', 'FN') IS NOT NULL
 	DROP FUNCTION dbo.f_checkSalary;
@@ -797,7 +797,7 @@ GO
 
 /*
 region met branch en retailer_site
-USE [Outdoor Paradise];
+USE [OutdoorParadise];
 IF OBJECT_ID('dbo.checkRegion', 'FN') IS NOT NULL
 	DROP FUNCTION dbo.checkRegion;
 GO
